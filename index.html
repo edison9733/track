@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Expense Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface-2: #242836;
+    --border: #2e3345;
+    --text: #e8eaf0;
+    --text-dim: #8b90a5;
+    --accent: #6ee7b7;
+    --accent-dim: rgba(110, 231, 183, 0.12);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.12);
+    --cat-food: #fbbf24;
+    --cat-transport: #60a5fa;
+    --cat-shopping: #f472b6;
+    --cat-bills: #a78bfa;
+    --cat-entertainment: #fb923c;
+    --cat-health: #34d399;
+    --cat-other: #94a3b8;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 20px 16px 100px;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 24px 0 20px;
+  }
+  header h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  header p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ── Summary Cards ── */
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .summary-card .label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .summary-card .amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .summary-card.month .amount {
+    color: var(--text);
+  }
+
+  /* ── Add Form ── */
+  .add-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .add-section h2 {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .form-row.full {
+    grid-template-columns: 1fr;
+  }
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .field input::placeholder {
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+  .field select {
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238b90a5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .field select option {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .btn-add {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 4px;
+  }
+  .btn-add:hover { opacity: 0.9; }
+  .btn-add:active { transform: scale(0.98); }
+
+  /* ── Filter Tabs ── */
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .filter-tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Expense List ── */
+  .expenses-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .expenses-header h2 {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+  }
+  .expense-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+
+  .expense-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .expense-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: opacity 0.2s;
+    animation: slideIn 0.25s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .expense-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .expense-desc {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .expense-meta {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+  .expense-amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--red);
+    flex-shrink: 0;
+  }
+  .btn-delete {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.4;
+    transition: opacity 0.2s, color 0.2s;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  .btn-delete:hover {
+    opacity: 1;
+    color: var(--red);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 0.88rem;
+  }
+  .empty-state span {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  /* ── Currency selector ── */
+  .currency-pick {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .currency-btn {
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    font-family: 'DM Mono', monospace;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .currency-btn.active {
+    background: var(--surface-2);
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 400px) {
+    .app { padding: 12px 10px 90px; }
+    .summary-card .amount { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header>
+    <h1>💸 Expense Tracker</h1>
+    <p id="current-date"></p>
+  </header>
+
+  <!-- Currency -->
+  <div class="currency-pick" id="currency-pick"></div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="summary-card today">
+      <div class="label">Today</div>
+      <div class="amount" id="today-total">0.00</div>
+    </div>
+    <div class="summary-card month">
+      <div class="label" id="month-label">This Month</div>
+      <div class="amount" id="month-total">0.00</div>
+    </div>
+  </div>
+
+  <!-- Add -->
+  <div class="add-section">
+    <h2>+ Add Expense</h2>
+    <div class="form-row">
+      <div class="field">
+        <label>Amount</label>
+        <input type="number" id="inp-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select id="inp-category">
+          <option value="Food">🍔 Food</option>
+          <option value="Transport">🚌 Transport</option>
+          <option value="Shopping">🛍️ Shopping</option>
+          <option value="Bills">📄 Bills</option>
+          <option value="Entertainment">🎬 Entertainment</option>
+          <option value="Health">💊 Health</option>
+          <option value="Other">📦 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>Description</label>
+        <input type="text" id="inp-desc" placeholder="What did you spend on?" maxlength="60">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="inp-date">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button class="btn-add" onclick="addExpense()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar" id="filter-bar"></div>
+
+  <!-- List -->
+  <div class="expenses-header">
+    <h2>Recent Expenses</h2>
+    <span class="expense-count" id="expense-count"></span>
+  </div>
+  <div class="expense-list" id="expense-list"></div>
+</div>
+
+<script>
+  const CATEGORIES = ['All','Food','Transport','Shopping','Bills','Entertainment','Health','Other'];
+  const CAT_COLORS = {
+    Food:'#fbbf24', Transport:'#60a5fa', Shopping:'#f472b6',
+    Bills:'#a78bfa', Entertainment:'#fb923c', Health:'#34d399', Other:'#94a3b8'
+  };
+  const CURRENCIES = [
+    { code:'USD', symbol:'$' },
+    { code:'EUR', symbol:'€' },
+    { code:'GBP', symbol:'£' },
+    { code:'MYR', symbol:'RM' },
+    { code:'JPY', symbol:'¥' },
+  ];
+
+  let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+  let currentFilter = 'All';
+  let currency = localStorage.getItem('currency') || 'USD';
+
+  function getCurrencySymbol() {
+    return CURRENCIES.find(c => c.code === currency)?.symbol || '$';
+  }
+
+  function formatMoney(n) {
+    return getCurrencySymbol() + parseFloat(n).toFixed(currency === 'JPY' ? 0 : 2);
+  }
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function monthStr() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  }
+
+  function save() {
+    localStorage.setItem('expenses', JSON.stringify(expenses));
+    localStorage.setItem('currency', currency);
+  }
+
+  // ── Init Date ──
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+  document.getElementById('inp-date').value = todayStr();
+
+  const mName = new Date().toLocaleDateString('en-US',{month:'long'});
+  document.getElementById('month-label').textContent = mName;
+
+  // ── Currency Buttons ──
+  function renderCurrency() {
+    const el = document.getElementById('currency-pick');
+    el.innerHTML = CURRENCIES.map(c =>
+      `<button class="currency-btn ${c.code===currency?'active':''}" onclick="setCurrency('${c.code}')">${c.code}</button>`
+    ).join('');
+  }
+  function setCurrency(code) {
+    currency = code;
+    save();
+    renderCurrency();
+    renderAll();
+  }
+  renderCurrency();
+
+  // ── Filter Tabs ──
+  function renderFilters() {
+    const el = document.getElementById('filter-bar');
+    el.innerHTML = CATEGORIES.map(c =>
+      `<button class="filter-tab ${c===currentFilter?'active':''}" onclick="setFilter('${c}')">${c}</button>`
+    ).join('');
+  }
+  function setFilter(cat) {
+    currentFilter = cat;
+    renderFilters();
+    renderList();
+  }
+  renderFilters();
+
+  // ── Add ──
+  function addExpense() {
+    const amount = parseFloat(document.getElementById('inp-amount').value);
+    const category = document.getElementById('inp-category').value;
+    const desc = document.getElementById('inp-desc').value.trim();
+    const date = document.getElementById('inp-date').value;
+
+    if (!amount || amount <= 0) { shakeField('inp-amount'); return; }
+    if (!desc) { shakeField('inp-desc'); return; }
+    if (!date) { shakeField('inp-date'); return; }
+
+    expenses.unshift({ id: Date.now(), amount, category, desc, date });
+    save();
+    renderAll();
+
+    document.getElementById('inp-amount').value = '';
+    document.getElementById('inp-desc').value = '';
+    document.getElementById('inp-amount').focus();
+  }
+
+  function shakeField(id) {
+    const el = document.getElementById(id);
+    el.style.borderColor = '#f87171';
+    el.style.transition = 'border-color 0.3s';
+    setTimeout(() => { el.style.borderColor = ''; }, 1000);
+  }
+
+  // ── Delete ──
+  function deleteExpense(id) {
+    expenses = expenses.filter(e => e.id !== id);
+    save();
+    renderAll();
+  }
+
+  // ── Render ──
+  function renderSummary() {
+    const today = todayStr();
+    const month = monthStr();
+    const todayTotal = expenses.filter(e => e.date === today).reduce((s,e) => s + e.amount, 0);
+    const monthTotal = expenses.filter(e => e.date.startsWith(month)).reduce((s,e) => s + e.amount, 0);
+    document.getElementById('today-total').textContent = formatMoney(todayTotal);
+    document.getElementById('month-total').textContent = formatMoney(monthTotal);
+  }
+
+  function renderList() {
+    const filtered = currentFilter === 'All' ? expenses : expenses.filter(e => e.category === currentFilter);
+    const el = document.getElementById('expense-list');
+    const countEl = document.getElementById('expense-count');
+    countEl.textContent = filtered.length + ' item' + (filtered.length !== 1 ? 's' : '');
+
+    if (filtered.length === 0) {
+      el.innerHTML = `<div class="empty-state"><span>📭</span>No expenses yet</div>`;
+      return;
+    }
+
+    el.innerHTML = filtered.map(e => `
+      <div class="expense-item">
+        <div class="cat-dot" style="background:${CAT_COLORS[e.category]||'#94a3b8'}"></div>
+        <div class="expense-info">
+          <div class="expense-desc">${escHtml(e.desc)}</div>
+          <div class="expense-meta">${e.category} · ${formatDate(e.date)}</div>
+        </div>
+        <div class="expense-amount">-${formatMoney(e.amount)}</div>
+        <button class="btn-delete" onclick="deleteExpense(${e.id})" title="Delete">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function formatDate(d) {
+    const [y,m,day] = d.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[parseInt(m)-1] + ' ' + parseInt(day);
+  }
+
+  function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function renderAll() {
+    renderSummary();
+    renderList();
+  }
+  renderAll();
+
+  // ── Enter key shortcut ──
+  document.getElementById('inp-desc').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addExpense();
+  });
+  document.getElementById('inp-amount').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('inp-desc').focus();
+  });
+</script>
+
+</body>
+</html>
